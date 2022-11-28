@@ -5,25 +5,28 @@ import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
 import { CommentsModule } from './comments/comments.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserEntity } from './users/entities/user.entity';
 import { PostEntity } from './posts/entities/post.entity';
-import { CommentEntity } from './comments/entities/comment.entity';
+import { AuthModule } from './auth/auth.module';
+import { UserEntity } from './users/entities/user.entity';
+import { LocalStrategy } from './auth/stategies/local.stategy';
+
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
-      type: 'mysql',
+      type: 'postgres',
       host: 'localhost',
       port: 5432,
       username: 'postgres',
       password: '1036845297',
       database: 'portfolio-blog',
-      entities: [UserEntity, PostEntity, CommentEntity],
+      entities: [PostEntity, UserEntity],
       synchronize: true,
     }),
     UsersModule,
     PostsModule,
     CommentsModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
