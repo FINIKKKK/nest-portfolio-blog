@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -24,6 +25,7 @@ export class PostEntity {
   body: OutputBlockData[];
 
   @ManyToOne(() => UserEntity, { eager: false })
+  @JoinColumn({ name: 'user' })
   user: UserEntity;
 
   @Column({ default: 0 })

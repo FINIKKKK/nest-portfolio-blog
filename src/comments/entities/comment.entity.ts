@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -18,14 +19,16 @@ export class CommentEntity {
   text: string;
 
   @ManyToOne(() => UserEntity, { nullable: false })
+  @JoinColumn({ name: 'user' })
   user: UserEntity;
 
   @ManyToOne(() => PostEntity, { nullable: false })
+  @JoinColumn({ name: 'post' })
   post: PostEntity;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
   @UpdateDateColumn({ type: 'timestamp' })
-  updateAt: Date;
+  updatedAt: Date;
 }

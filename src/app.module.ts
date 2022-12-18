@@ -9,6 +9,7 @@ import { PostEntity } from './posts/entities/post.entity';
 import { AuthModule } from './auth/auth.module';
 import { UserEntity } from './users/entities/user.entity';
 import { LocalStrategy } from './auth/stategies/local.stategy';
+import { CommentEntity } from './comments/entities/comment.entity';
 
 
 @Module({
@@ -20,7 +21,7 @@ import { LocalStrategy } from './auth/stategies/local.stategy';
       username: 'postgres',
       password: '1036845297',
       database: 'portfolio-blog',
-      entities: [PostEntity, UserEntity],
+      entities: [PostEntity, UserEntity, CommentEntity],
       synchronize: true,
     }),
     UsersModule,

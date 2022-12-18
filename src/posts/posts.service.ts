@@ -17,23 +17,33 @@ export class PostsService {
     private repository: Repository<PostEntity>,
   ) {}
 
-  create(dto: CreatePostDto, userId: number) {
+  async create(dto: CreatePostDto, userId: number) {
     const firstPatagraph = dto.body.find((obj) => obj.type === 'paragraph')
       ?.data?.text;
 
-    return this.repository.save({
+    const post = await this.repository.save({
       title: dto.title,
       body: dto.body,
       description: firstPatagraph || '',
-      author: { id: userId },
+      user: { id: userId },
+    });
+
+    return this.repository.findOne({
+      where: { id: post.id },
+      relations: ['user'],
     });
   }
 
-  findAll() {
-    return this.repository.find({
-      order: {
-        createdAt: 'DESC',
-      },
+  async findAll() {
+    const qb = await this.repository.createQueryBuilder('p');
+
+    const arr = await qb.leftJoinAndSelect('p.user', 'user').getMany();
+
+    return arr.map((obj) => {
+      return {
+        ...obj,
+        user: { id: obj.user.id, name: obj.user.name },
+      };
     });
   }
 
@@ -93,11 +103,15 @@ export class PostsService {
       })
       .execute();
 
-    return this.repository.findOne({
-      where: {
-        id,
-      },
-    });
+    const post = await this.repository
+      .createQueryBuilder('c')
+      .leftJoinAndSelect('c.user', 'user')
+      .getOne();
+
+    return {
+      ...post,
+      user: { id: post.user.id, name: post.user.name },
+    };
   }
 
   async update(id: number, dto: UpdatePostDto, userId: number) {
