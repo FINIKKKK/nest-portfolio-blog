@@ -1,3 +1,4 @@
+import { CategoryEntity } from 'src/categories/entities/category.entity';
 import { UserEntity } from 'src/users/entities/user.entity';
 import {
   Column,
@@ -23,6 +24,10 @@ export class PostEntity {
 
   @Column({ type: 'jsonb' })
   body: OutputBlockData[];
+
+  @ManyToOne(() => CategoryEntity, { eager: false })
+  @JoinColumn({ name: 'category' })
+  category: CategoryEntity;
 
   @ManyToOne(() => UserEntity, { eager: false })
   @JoinColumn({ name: 'user' })

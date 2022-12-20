@@ -10,6 +10,8 @@ import { AuthModule } from './auth/auth.module';
 import { UserEntity } from './users/entities/user.entity';
 import { LocalStrategy } from './auth/stategies/local.stategy';
 import { CommentEntity } from './comments/entities/comment.entity';
+import { CategoriesModule } from './categories/categories.module';
+import { CategoryEntity } from './categories/entities/category.entity';
 
 
 @Module({
@@ -21,13 +23,14 @@ import { CommentEntity } from './comments/entities/comment.entity';
       username: 'postgres',
       password: '1036845297',
       database: 'portfolio-blog',
-      entities: [PostEntity, UserEntity, CommentEntity],
+      entities: [PostEntity, UserEntity, CommentEntity, CategoryEntity],
       synchronize: true,
     }),
     UsersModule,
     PostsModule,
     CommentsModule,
     AuthModule,
+    CategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

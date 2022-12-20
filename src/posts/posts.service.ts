@@ -23,6 +23,7 @@ export class PostsService {
 
     const post = await this.repository.save({
       title: dto.title,
+      category: { id: dto.categoryId },
       body: dto.body,
       description: firstPatagraph || '',
       user: { id: userId },
@@ -30,18 +31,22 @@ export class PostsService {
 
     return this.repository.findOne({
       where: { id: post.id },
-      relations: ['user'],
+      relations: ['user', 'category'],
     });
   }
 
   async findAll() {
     const qb = await this.repository.createQueryBuilder('p');
 
-    const arr = await qb.leftJoinAndSelect('p.user', 'user').getMany();
+    const arr = await qb
+      .leftJoinAndSelect('p.category', 'category')
+      .leftJoinAndSelect('p.user', 'user')
+      .getMany();
 
     return arr.map((obj) => {
       return {
         ...obj,
+        category: { id: obj.category.id, name: obj.category.name },
         user: { id: obj.user.id, name: obj.user.name },
       };
     });
@@ -104,32 +109,31 @@ export class PostsService {
       .execute();
 
     const post = await this.repository
-      .createQueryBuilder('c')
-      .leftJoinAndSelect('c.user', 'user')
+      .createQueryBuilder('p')
+      .leftJoinAndSelect('p.category', 'category')
+      .leftJoinAndSelect('p.user', 'user')
       .getOne();
 
     return {
       ...post,
+      category: { id: post.category.id, name: post.category.name },
       user: { id: post.user.id, name: post.user.name },
     };
   }
 
   async update(id: number, dto: UpdatePostDto, userId: number) {
-    const find = await this.repository.update(id, dto);
-
-    if (!find) {
-      throw new NotFoundException();
-    }
-
-    const firstPatagraph = dto.body.find((obj) => obj.type === 'paragraph')
-      ?.data?.text;
-
-    return this.repository.update(id, {
-      title: dto.title,
-      body: dto.body,
-      description: firstPatagraph || '',
-      user: { id: userId },
-    });
+    // const find = await this.repository.update(id, dto);
+    // if (!find) {
+    //   throw new NotFoundException();
+    // }
+    // const firstPatagraph = dto.body.find((obj) => obj.type === 'paragraph')
+    //   ?.data?.text;
+    // return this.repository.update(id, {
+    //   title: dto.title,
+    //   body: dto.body,
+    //   description: firstPatagraph || '',
+    //   user: { id: userId },
+    // });
   }
 
   async remove(id: number, userId: number) {

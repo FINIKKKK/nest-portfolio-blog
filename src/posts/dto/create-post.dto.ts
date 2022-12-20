@@ -1,4 +1,4 @@
-import { IsArray, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export type OutputBlockData = {
   id?: number;
@@ -12,4 +12,7 @@ export class CreatePostDto {
 
   @IsArray()
   body: OutputBlockData[];
+
+  @IsNumber()
+  categoryId: number;
 }

@@ -57,6 +57,7 @@ export class CommentsService {
   }
 
   remove(id: number) {
+    console.log(id);
     return this.repository.delete(id);
   }
 }
