@@ -28,15 +28,12 @@ export class CommentsService {
   }
 
   async findAll(postId: number) {
-    const qb = await this.repository.createQueryBuilder('c');
-
-    if (postId) {
-      qb.where('c.postId = :postId', { postId });
-    }
-
-    const arr = await qb
-      .leftJoinAndSelect('c.post', 'post')
-      .leftJoinAndSelect('c.user', 'user')
+    const arr = await this.repository
+      .createQueryBuilder('comments')
+      .where('comments.post = :postId', { postId })
+      .orderBy('comments.createdAt', 'DESC')
+      .leftJoinAndSelect('comments.post', 'post')
+      .leftJoinAndSelect('comments.user', 'user')
       .getMany();
 
     return arr.map((obj) => {
@@ -56,8 +53,18 @@ export class CommentsService {
     return this.repository.update(id, dto);
   }
 
+  async removeAllOnPost(postId: number) {
+    const arr = await this.repository
+      .createQueryBuilder('comments')
+      .where('comments.post = :postId', { postId })
+      .getMany();
+
+    return arr.map((obj) => {
+      this.repository.delete(obj.id);
+    });
+  }
+
   remove(id: number) {
-    console.log(id);
     return this.repository.delete(id);
   }
 }

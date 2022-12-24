@@ -4,7 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { CommentEntity } from 'src/comments/entities/comment.entity';
+import { FindOneOptions, Repository } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { SearchPostDto } from './dto/search-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -35,39 +36,42 @@ export class PostsService {
     });
   }
 
-  async findAll() {
+  async findAll(dto: { limit?: number; page?: number; categoryId?: number }) {
+    const limit = dto.limit || 3;
+    const page = dto.page || 1;
     const qb = await this.repository.createQueryBuilder('p');
 
-    const arr = await qb
+    if (dto.categoryId) {
+      qb.where({ category: { id: dto.categoryId } });
+    }
+
+    const [items, total] = await qb
+      .orderBy('p.createdAt', 'DESC')
       .leftJoinAndSelect('p.category', 'category')
       .leftJoinAndSelect('p.user', 'user')
-      .getMany();
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
 
-    return arr.map((obj) => {
+    const posts = items.map((obj) => {
       return {
         ...obj,
         category: { id: obj.category.id, name: obj.category.name },
         user: { id: obj.user.id, name: obj.user.name },
       };
     });
-  }
-
-  async popular() {
-    const qb = this.repository.createQueryBuilder();
-
-    qb.orderBy('views', 'DESC');
-    qb.limit(10);
-
-    const [items, total] = await qb.getManyAndCount();
 
     return {
-      items,
       total,
+      posts,
     };
   }
 
   async search(dto: SearchPostDto) {
     const qb = this.repository.createQueryBuilder('p');
+
+    qb.leftJoinAndSelect('p.user', 'user');
+    qb.leftJoinAndSelect('p.category', 'category');
 
     qb.limit(dto.limit || 0);
     qb.take(dto.take || 10);
@@ -77,25 +81,27 @@ export class PostsService {
     }
 
     if (dto.body) {
-      qb.andWhere(`p.body ILIKE :title `);
+      qb.andWhere(`p.body ILIKE :body`);
     }
 
     if (dto.title) {
-      qb.andWhere(`p.title ILIKE :body `);
+      qb.andWhere(`p.title ILIKE :title`);
+    }
+
+    if (dto.category) {
+      qb.andWhere(`p.category ILIKE :category`);
     }
 
     qb.setParameters({
-      title: `%${dto.title}% `,
-      body: `%${dto.body}% `,
-      views: dto.views,
+      title: `%${dto.title}%`,
+      body: `%${dto.body}%`,
+      category: `%${dto.category}%`,
+      views: dto.views || '',
     });
 
     const [items, total] = await qb.getManyAndCount();
 
-    return {
-      items,
-      total,
-    };
+    return { items, total };
   }
 
   async findOne(id: number) {
@@ -109,9 +115,10 @@ export class PostsService {
       .execute();
 
     const post = await this.repository
-      .createQueryBuilder('p')
-      .leftJoinAndSelect('p.category', 'category')
-      .leftJoinAndSelect('p.user', 'user')
+      .createQueryBuilder('posts')
+      .whereInIds(id)
+      .leftJoinAndSelect('posts.category', 'category')
+      .leftJoinAndSelect('posts.user', 'user')
       .getOne();
 
     return {
@@ -122,27 +129,23 @@ export class PostsService {
   }
 
   async update(id: number, dto: UpdatePostDto, userId: number) {
-    // const find = await this.repository.update(id, dto);
-    // if (!find) {
-    //   throw new NotFoundException();
-    // }
-    // const firstPatagraph = dto.body.find((obj) => obj.type === 'paragraph')
-    //   ?.data?.text;
-    // return this.repository.update(id, {
-    //   title: dto.title,
-    //   body: dto.body,
-    //   description: firstPatagraph || '',
-    //   user: { id: userId },
-    // });
+    const find = await this.repository.update(id, dto);
+    if (!find) {
+      throw new NotFoundException();
+    }
+
+    const firstPatagraph = dto.body.find((obj) => obj.type === 'paragraph')?.data?.text;
+    return this.repository.update(id, {
+      title: dto.title,
+      body: dto.body,
+      description: firstPatagraph || '',
+      // @ts-ignore
+      category: { id: dto.category },
+      user: { id: userId },
+    });
   }
 
   async remove(id: number, userId: number) {
-    const find = await this.repository.delete(id);
-
-    if (!find) {
-      throw new NotFoundException('Статья не найдена');
-    }
-
-    return find;
+    return this.repository.delete(id);
   }
 }

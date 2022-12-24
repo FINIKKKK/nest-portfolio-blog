@@ -19,14 +19,14 @@ import { UpdateCommentDto } from './dto/update-comment.dto';
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
-  @Post()
   @UseGuards(JwtAuthGuard)
+  @Post()
   create(@Body() createCommentDto: CreateCommentDto, @User() userId: number) {
     return this.commentsService.create(createCommentDto, userId);
   }
 
   @Get()
-  findAll(@Query() query: { postId?: string }) {
+  findAll(@Query() query: { postId: string }) {
     return this.commentsService.findAll(+query.postId);
   }
 
@@ -35,13 +35,21 @@ export class CommentsController {
     return this.commentsService.findOne(+id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCommentDto: UpdateCommentDto) {
     return this.commentsService.update(+id, updateCommentDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.commentsService.remove(+id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete()
+  removeAllOnPost(@Query() query: { postId: number }) {
+    return this.commentsService.removeAllOnPost(+query.postId);
   }
 }

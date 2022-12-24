@@ -36,6 +36,7 @@ export class PostsController {
     return this.postsService.update(+id, updatePostDto, userId);
   }
 
+  
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string, @User() userId: number) {
@@ -43,17 +44,17 @@ export class PostsController {
   }
 
   @Get()
-  findAll() {
-    return this.postsService.findAll();
+  findAll(@Query() dto: { limit?: number; page?: number; categoryId?: number }) {
+    return this.postsService.findAll(dto);
+  }
+
+  @Get('/search')
+  searchPosts(@Query() dto: SearchPostDto) {
+    return this.postsService.search(dto);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.postsService.findOne(+id);
-  }
-
-  @Get('/search')
-  search(@Query() dto: SearchPostDto) {
-    return this.postsService.search(dto);
   }
 }
