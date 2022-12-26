@@ -19,30 +19,55 @@ export class CommentsService {
       user: {
         id: userId,
       },
+      parent: { id: dto.parentId },
+      parentUser: { id: dto.parentUserId },
     });
 
     return this.repository.findOne({
       where: { id: comment.id },
-      relations: ['user'],
+      relations: ['post', 'user', 'parent', 'parentUser'],
     });
   }
 
   async findAll(postId: number) {
-    const arr = await this.repository
-      .createQueryBuilder('comments')
+    const qb = await this.repository.createQueryBuilder('comments');
+
+    const arr = await qb
       .where('comments.post = :postId', { postId })
       .orderBy('comments.createdAt', 'DESC')
       .leftJoinAndSelect('comments.post', 'post')
       .leftJoinAndSelect('comments.user', 'user')
+      .leftJoinAndSelect('comments.parent', 'parent')
+      .leftJoinAndSelect('comments.parentUser', 'parentUser')
+      .leftJoinAndSelect('comments.children', 'children')
+      .leftJoinAndSelect('children.user', 'children_user')
+      .leftJoinAndSelect('children.parentUser', 'parentUser_user')
       .getMany();
 
-    return arr.map((obj) => {
-      return {
-        ...obj,
-        post: { id: obj.post.id, title: obj.post.title },
-        user: { id: obj.user.id, name: obj.user.name },
-      };
-    });
+    const processChildren = (parent: any) => {
+      return parent.children
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .map((obj) => {
+          return {
+            ...obj,
+            user: { id: obj.user.id, name: obj.user.name },
+            parentUser: { id: obj.parentUser.id, name: obj.parentUser.name },
+          };
+        });
+    };
+
+    return (
+      arr
+        .filter((obj) => obj.parent === null)
+        .map((obj) => {
+          return {
+            ...obj,
+            post: { id: obj.post.id, title: obj.post.title },
+            user: { id: obj.user.id, name: obj.user.name },
+            children: processChildren(obj),
+          };
+        })
+    );
   }
 
   findOne(id: number) {
@@ -53,15 +78,8 @@ export class CommentsService {
     return this.repository.update(id, dto);
   }
 
-  async removeAllOnPost(postId: number) {
-    const arr = await this.repository
-      .createQueryBuilder('comments')
-      .where('comments.post = :postId', { postId })
-      .getMany();
-
-    return arr.map((obj) => {
-      this.repository.delete(obj.id);
-    });
+  deleteCommentsByPostId(postId: number) {
+    this.repository.delete({ post: { id: postId } });
   }
 
   remove(id: number) {

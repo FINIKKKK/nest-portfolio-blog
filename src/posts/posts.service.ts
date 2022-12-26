@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CommentsService } from 'src/comments/comments.service';
 import { CommentEntity } from 'src/comments/entities/comment.entity';
 import { FindOneOptions, Repository } from 'typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -16,6 +17,7 @@ export class PostsService {
   constructor(
     @InjectRepository(PostEntity)
     private repository: Repository<PostEntity>,
+    private commentsService: CommentsService,
   ) {}
 
   async create(dto: CreatePostDto, userId: number) {
@@ -114,6 +116,17 @@ export class PostsService {
       })
       .execute();
 
+    const twoPosts = await this.repository
+      .createQueryBuilder('posts')
+      .where('posts.id != :id', { id })
+      .orderBy('RANDOM()')
+      .limit(2)
+      .getMany();
+
+    const random2Posts = twoPosts.map((obj) => {
+      return { id: obj.id, title: obj.title };
+    });
+
     const post = await this.repository
       .createQueryBuilder('posts')
       .whereInIds(id)
@@ -125,6 +138,7 @@ export class PostsService {
       ...post,
       category: { id: post.category.id, name: post.category.name },
       user: { id: post.user.id, name: post.user.name },
+      random2Posts: random2Posts,
     };
   }
 
@@ -134,7 +148,8 @@ export class PostsService {
       throw new NotFoundException();
     }
 
-    const firstPatagraph = dto.body.find((obj) => obj.type === 'paragraph')?.data?.text;
+    const firstPatagraph = dto.body.find((obj) => obj.type === 'paragraph')
+      ?.data?.text;
     return this.repository.update(id, {
       title: dto.title,
       body: dto.body,
@@ -146,6 +161,7 @@ export class PostsService {
   }
 
   async remove(id: number, userId: number) {
-    return this.repository.delete(id);
+    await this.commentsService.deleteCommentsByPostId(id)
+    await this.repository.delete(id);
   }
 }

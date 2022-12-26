@@ -6,6 +6,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -25,6 +26,20 @@ export class CommentEntity {
   @ManyToOne(() => PostEntity, { nullable: false })
   @JoinColumn({ name: 'post' })
   post: PostEntity;
+
+  @OneToMany((type) => CommentEntity, (comment) => comment.parent)
+  @JoinColumn({ name: 'children' })
+  children: CommentEntity[];
+
+  @ManyToOne((type) => CommentEntity, (comment) => comment.children, {
+    nullable: true,
+  })
+  @JoinColumn({ name: 'parent' })
+  parent: CommentEntity;
+
+  @ManyToOne(() => UserEntity, { nullable: true })
+  @JoinColumn({ name: 'parentUser' })
+  parentUser: UserEntity;
 
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;

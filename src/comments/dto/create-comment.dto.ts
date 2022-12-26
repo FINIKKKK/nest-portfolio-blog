@@ -6,4 +6,8 @@ export class CreateCommentDto {
 
   @IsNotEmpty()
   postId: number;
+
+  parentId?: number;
+
+  parentUserId?: number;
 }

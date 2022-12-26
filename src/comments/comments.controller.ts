@@ -21,8 +21,8 @@ export class CommentsController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() createCommentDto: CreateCommentDto, @User() userId: number) {
-    return this.commentsService.create(createCommentDto, userId);
+  create(@Body() dto: CreateCommentDto, @User() userId: number) {
+    return this.commentsService.create(dto, userId);
   }
 
   @Get()
@@ -50,6 +50,6 @@ export class CommentsController {
   @UseGuards(JwtAuthGuard)
   @Delete()
   removeAllOnPost(@Query() query: { postId: number }) {
-    return this.commentsService.removeAllOnPost(+query.postId);
+    return this.commentsService.deleteCommentsByPostId(+query.postId);
   }
 }
