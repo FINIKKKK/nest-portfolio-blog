@@ -4,11 +4,11 @@ This project is a backend for a blog.
 
 📌Frontend: https://github.com/FINIKKKK/next-portfolio-blog
 
-Framework: **NestJS**
-ORM: **TypeOrm**
-DB: **Postgress**
+- Framework: **NestJS**
+- ORM: **TypeOrm**
+- DB: **Postgress**
 
-## ## Backend includes functionality 🛠:
+## Backend includes functionality 🛠:
 - Authorization and registration with JWT
 - DTO validation
 - JWT auth guard (Granting access using a token)
