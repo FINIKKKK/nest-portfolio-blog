@@ -56,18 +56,16 @@ export class CommentsService {
         });
     };
 
-    return (
-      arr
-        .filter((obj) => obj.parent === null)
-        .map((obj) => {
-          return {
-            ...obj,
-            post: { id: obj.post.id, title: obj.post.title },
-            user: { id: obj.user.id, name: obj.user.name },
-            children: processChildren(obj),
-          };
-        })
-    );
+    return arr
+      .filter((obj) => obj.parent === null)
+      .map((obj) => {
+        return {
+          ...obj,
+          post: { id: obj.post.id, title: obj.post.title },
+          user: { id: obj.user.id, name: obj.user.name },
+          children: processChildren(obj),
+        };
+      });
   }
 
   findOne(id: number) {
@@ -82,7 +80,8 @@ export class CommentsService {
     this.repository.delete({ post: { id: postId } });
   }
 
-  remove(id: number) {
-    return this.repository.delete(id);
+  async remove(id: number) {
+    await this.repository.delete({ parent: { id } });
+    await this.repository.delete(id);
   }
 }
